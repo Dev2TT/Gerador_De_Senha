@@ -23,6 +23,74 @@ def create_user():
         return jsonify({'erro':str(e.args)}),400
     
 
-@user_bp.route('/users')
+@user_bp.route('/users',methods=['GET'])
 def get_usuarios():
-    return jsonify({'message':'Lista de usuarios...'})
+    try:
+        usuarios=db.session.execute(db.select(Users).order_by(Users.nome)).all()
+    except Exception as e:
+        return jsonify({'message':f'{str(e.__cause__)}'})
+
+    return jsonify({'Usuarios':f'{usuarios}'})
+
+@user_bp.route('/user/<string:id_user>',methods=['GET'])
+def get_user_by_id(id_user):
+    id_user=int(id_user)
+    try:
+        user=db.session.execute(db.Query(Users.nome).filter_by(id=id_user)).scalar()
+    
+    except Exception as e:
+        return jsonify({'message':f'{str(e.args)}'})
+    
+    if user:
+        return jsonify({'Usuario':user})
+    
+    return jsonify({'message':f'Usuario com id: {str(id_user)} nao encontrado.'})
+
+
+@user_bp.route('/user/<string:id_user>',methods=['DELETE'])
+def delete_user(id_user):
+    id_user=int(id_user)
+
+    try:
+        user=db.session.execute(db.Query(Users).filter_by(id=id_user)).scalar()
+    
+    except Exception as e:
+        return jsonify({'erro':f'{str(e.args)}'})
+    
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message':f'Usuario com {str(id_user)} foi deletado do banco.'})
+    
+    return jsonify({'message':'Usuario nao foi encontrado'})
+
+
+@user_bp.route('/user/<string:id_user>',methods=['PUT'])
+def atualiza_usuario(id_user):
+    id_user=int(id_user)
+
+    try:
+        user=db.session.execute(db.Query(Users).filter_by(id=id_user)).scalar()
+    
+    except Exception as e:
+        return jsonify({'erro':f'{str(e.args)}'})
+    
+    if user:
+        data=request.get_json()
+
+        novo_nome= data.get('nome')
+        nova_senha=data.get('senha')
+        
+        if novo_nome != None:
+            user.nome = str(novo_nome)
+
+        if nova_senha != None:
+            user.senha=str(nova_senha)    
+
+
+        db.session.commit()
+
+        return jsonify({'Sucesso':f'Usuario com id {str(id_user)} foi atualizado'})
+
+    return jsonify({'message':f'Usuario com id {str(id_user)} nao localizado.'})
+                
