@@ -1,4 +1,4 @@
-from flask import Blueprint,jsonify,request
+from flask import Blueprint,jsonify,request,session
 from app.models.users import Users
 from extensios import db
 
@@ -32,9 +32,8 @@ def get_usuarios():
 
     return jsonify({'Usuarios':f'{usuarios}'})
 
-@user_bp.route('/user/<string:id_user>',methods=['GET'])
+@user_bp.route('/user/<int:id_user>',methods=['GET'])
 def get_user_by_id(id_user):
-    id_user=int(id_user)
     try:
         user=db.session.execute(db.Query(Users.nome).filter_by(id=id_user)).scalar()
     
@@ -93,4 +92,44 @@ def atualiza_usuario(id_user):
         return jsonify({'Sucesso':f'Usuario com id {str(id_user)} foi atualizado'})
 
     return jsonify({'message':f'Usuario com id {str(id_user)} nao localizado.'})
-                
+
+@user_bp.route('/user/login/', methods=['POST'])
+def login():
+    try:
+        data=request.get_json()
+        
+    except Exception as e:
+        return jsonify({'message':'JSON nao encontrado'})
+    
+    username=data.get('username')
+    senha=data.get('senha')
+    
+    try:
+        user=db.session.execute(db.Query(Users).filter_by(nome=username)).scalar()
+
+    except Exception as e:
+        return jsonify({'erro':f'{str(e.args)}'})
+    
+    if user:
+        if user.senha == senha:
+            if 'conta_conectada' not in session or session['conta_conectada'] == None:
+                session['conta_conectada']=username
+                return jsonify({'Message':'logado!'})
+        
+        return jsonify({'message':'Senha Incorreta'}),404
+    
+    return jsonify({'message':'usuario nao encontrado no banco'}),200
+
+@user_bp.route('/user/logout')
+def logout():
+    if session.get('conta_conectada') != None:
+        try:
+            session['conta_conectada']=None
+            return jsonify({'logout':'Deslogado'})
+        
+        except Exception as e:
+            return jsonify({'erro':f'{str(e.args)}'})
+
+    return jsonify({'logout':'Nao possui conta conectada para deslogar.'})
+
+    
