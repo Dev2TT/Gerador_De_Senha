@@ -1,13 +1,38 @@
 from flask import Blueprint,jsonify,session
 from extensios import db
 from app.models.passwords import Passwords
+from app.services.password_service import PasswordService
 
 password_bp=Blueprint('password',__name__)
 
 
-@password_bp.route("/password/create")
-def create_password():
-    return jsonify({'message':'Rota que cria senha'})
+@password_bp.route("/password/create/<string:senha>",methods=['POST'])
+def create_password(senha):    
+    id_usuario=session['conta_conectada']
+
+    if not id_usuario:
+        return jsonify({'message':'Nenhum usuario logado'})
+    
+    try:
+        strong_password=PasswordService.create_password(senha)
+        
+        if strong_password == None or strong_password == '':
+            return jsonify({'erro':'senha_vazia'})
+
+        password_user=Passwords(
+            id_user=id_usuario,
+            password=strong_password
+            )
+        
+        db.session.add(password_user)
+        db.session.commit()
+
+        return jsonify({'message':'password added'})
+
+    except Exception as e:
+        return jsonify({'erro':f'{str(e.args)}'})
+    
+    
 
 @password_bp.route('/passwords',methods=['GET'])
 def get_password():
@@ -17,12 +42,10 @@ def get_password():
     
     id_user_logado=session.get('conta_conectada')
 
-    try:
-        query=db.session.execute(db.Query(Passwords.password).filter_by(id_user=id_user_logado)).scalar()
+    passwords=PasswordService.get_passwords(id_user_logado)
+
+    if passwords == None:
+        return jsonify({'message':'Nenhuma senha associada a esse usuario'})
     
-    except Exception as e:
-        return jsonify({'erro':f'{str(e.args)}'})
-
-
-    return jsonify({'message':'Conta conectada'})
+    return jsonify({'Passwords':passwords})
         

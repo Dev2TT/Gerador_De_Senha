@@ -110,7 +110,7 @@ def login():
     except Exception as e:
         return jsonify({'erro':f'{str(e.args)}'})
     
-    if user:
+    if user.nome == username:
         if user.senha == senha:
             if 'conta_conectada' not in session or session['conta_conectada'] == None:
                 session['conta_conectada']=user.id
