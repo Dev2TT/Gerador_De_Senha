@@ -29,20 +29,34 @@ class PasswordService:
 
     @staticmethod
     def get_passwords(id):
-        lista_senhas=[]
+        senhas={}
 
         try:
-            query=db.session.execute(db.Query(Passwords.password).filter_by(id_user=id)).scalars()
+            query=db.session.execute(db.Query(Passwords).filter_by(id_user=id)).scalars()
         
         except Exception as e:
             return f'{str(e.args)}'
         
         if query != None:
             for senha in query:
-                lista_senhas.append(senha)
-            return lista_senhas
+                senhas[senha.id_senha] = senha.password
+            return senhas
         
         return None
+    
+    @staticmethod
+    def delete_password(id):
+        try:
+            senha=db.session.execute(db.Query(Passwords).filter_by(id_senha=id)).scalar()
+            db.session.delete(senha)
+            db.session.commit()
+
+        except Exception as e:
+            return {'message':f'senha com esse id [{id}] nao foi encontrada'}
+        
+        return {'message':f'senha com id {id} foi apagada'}
+
+
 
         
 

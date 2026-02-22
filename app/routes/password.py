@@ -1,4 +1,4 @@
-from flask import Blueprint,jsonify,session
+from flask import Blueprint,jsonify,session,request
 from extensios import db
 from app.models.passwords import Passwords
 from app.services.password_service import PasswordService
@@ -36,7 +36,6 @@ def create_password(senha):
 
 @password_bp.route('/passwords',methods=['GET'])
 def get_password():
-
     if 'conta_conectada' not in session or session['conta_conectada'] == None:
         return jsonify({'message':'Nao tem usuario logado'})
     
@@ -48,4 +47,16 @@ def get_password():
         return jsonify({'message':'Nenhuma senha associada a esse usuario'})
     
     return jsonify({'Passwords':passwords})
+
+@password_bp.route('/password/<int:id_senha>',methods=['DELETE'])
+def delete_password(id_senha):
+    if 'conta_conectada' not in session or session['conta_conectada'] == None:
+        return jsonify({'message':'usuario nao logado'})
+    
+    try:
+        query=PasswordService.delete_password(id_senha)
+        return jsonify({'message':query}),200
         
+    except Exception as e:
+        return jsonify({'error': str(e.args)}),400
+    
