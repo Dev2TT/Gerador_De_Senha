@@ -8,11 +8,9 @@ password_bp=Blueprint('password',__name__)
 
 @password_bp.route("/password/create/<string:senha>",methods=['POST'])
 def create_password(senha):    
-    id_usuario=session['conta_conectada']
+    if 'conta_conectada' not in session or session['conta_conectada'] == None:
+        return jsonify({'message':'Nao tem usuario logado'})
 
-    if not id_usuario:
-        return jsonify({'message':'Nenhum usuario logado'})
-    
     try:
         strong_password=PasswordService.create_password(senha)
         
@@ -20,7 +18,7 @@ def create_password(senha):
             return jsonify({'erro':'senha_vazia'})
 
         password_user=Passwords(
-            id_user=id_usuario,
+            id_user=int(session['conta_conectada']),
             password=strong_password
             )
         
@@ -55,8 +53,20 @@ def delete_password(id_senha):
     
     try:
         query=PasswordService.delete_password(id_senha)
-        return jsonify({'message':query}),200
+        return jsonify(query),200
         
     except Exception as e:
         return jsonify({'error': str(e.args)}),400
+
+@password_bp.route('/password/<int:id_senha>/<string:nova_senha>',methods=['PUT'])
+def atualiza_senha(id_senha,nova_senha):
+    if 'conta_conectada' not in session or session['conta_conectada'] == None:
+        return jsonify({'message':'usuario nao logado'})
     
+    try:
+        atualiza=PasswordService.atualiza_senha(id_senha,nova_senha)
+        return jsonify(atualiza),200
+    
+    except Exception as e:
+        return jsonify({'erro':str(e.args)})
+     

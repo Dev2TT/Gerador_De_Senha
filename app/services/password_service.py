@@ -57,7 +57,24 @@ class PasswordService:
         return {'message':f'senha com id {id} foi apagada'}
 
 
+    @staticmethod
+    def atualiza_senha(id:int,senha:str):
+        try:
+            query=db.session.execute(db.Query(Passwords).filter_by(id_senha=id)).scalar()
 
+        except Exception as e:
+            return {'message':str(e.args)}
+        
+        nova_senha=PasswordService.create_password(senha)
+
+        try:
+            atualizado=query.password=nova_senha
+            db.session.commit()
+            return {'message':'senha atualizada'}
+        
+        except Exception as e:
+            return {'message':str(e.args)}
+        
         
 
                 

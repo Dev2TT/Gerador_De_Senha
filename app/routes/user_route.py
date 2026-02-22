@@ -112,9 +112,9 @@ def login():
     
     if user.nome == username:
         if user.senha == senha:
-            if 'conta_conectada' not in session or session['conta_conectada'] == None:
-                session['conta_conectada']=user.id
-                return jsonify({'Message':'logado!'})
+            print("LOGIN salvou:", session['conta_conectada'])
+            session['conta_conectada']=user.id
+            return jsonify({'Message':'logado!'})
         
         return jsonify({'message':'Senha Incorreta'}),404
     

@@ -2,8 +2,8 @@ from extensios import db
 from app.models.users import Users
 
 class Passwords(db.Model):
-    id_senha=db.Column(db.Integer, primary_key=True,auto_increment=True)
-    id_user=db.Column(db.ForeignKey(Users.id), primary_key=True)
-    password=db.Column(db.String(255))
+    id_senha=db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_user = db.Column(db.Integer,db.ForeignKey('users.id'),nullable=False)
+    password=db.Column(db.String(255),nullable=False)
     
 
